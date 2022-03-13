@@ -1,18 +1,12 @@
 #===============================================================================
-# WDC Tools Assembler Definitions
+# CC65 Tools Assembler Definitions
 #-------------------------------------------------------------------------------
 
-AS			=	wdc816as
-
-LD			=	wdcln
-
-RM			=	erase
-
-AS_FLAGS	=	-g -l -DW65C265SXB=1
-
-LD_FLAGS	=	-g -hm28 -t -C0300
-
-DEBUG		=	wdcdb.exe
+AS          = ca65
+LD          = cl65
+RM          = rm
+AS_FLAGS   += --listing $(@:.obj=.lst) -o $@ -DW65C265SXB
+LD_FLAGS    =  -C $(CFG) -vm -m $(MAP)
 
 #===============================================================================
 # Rules
@@ -25,35 +19,41 @@ DEBUG		=	wdcdb.exe
 # Targets
 #-------------------------------------------------------------------------------
 
-OBJS	= \
-		w65c265sxb.obj \
-		sxb-hacker.obj
+CFG     = sxb-hacker.cfg
+MAP     = sxb-hacker.map
+SREC	= sxb-hacker.s28
+BINS    = sxb-0x0200.bin sxb-0x0300.bin
+OBJS	= w65c265sxb.obj sxb-hacker.obj
+LSTS	= w65c265sxb.lst sxb-hacker.lst
 
-all:	sxb-hacker.s28
+all:	$(BINS) $(SREC)
 
 clean:
-		$(RM) $(OBJS)
-		$(RM) *.bin
-		$(RM) *.lst
+	$(RM) -f $(MAP) $(SREC)\
+		$(OBJS)\
+		$(LSTS)\
+		$(BINS)
 
 debug:
-		$(DEBUG)
+	$(DEBUG)
 
 #===============================================================================
 # Dependencies
 #-------------------------------------------------------------------------------
 
-sxb-hacker.s28: $(OBJS)
-		$(LD) $(LD_FLAGS) -O $@ $(OBJS)
-		
-w65c256.inc:	\
-		w65c816.inc
+$(BINS): $(OBJS) $(CFG)
+	$(LD) $(LD_FLAGS) -o $@ $(OBJS)
 
-w65c265sxb.obj: \
-		w65c265.inc \
-		w65c265sxb.inc \
-		w65c265sxb.asm
+$(SREC): $(BINS)
+	srec_cat  -o $(SREC)\
+		-data-only\
+		-execution_start_address 0x0000\
+		-address-length 3 -line-length 47\
+		sxb-0x0200.bin -binary -offset 0x0200\
+		sxb-0x0300.bin -binary -offset 0x0300
+	cmp $(SREC) originals/$(SREC)
 
-sxb-hacker.obj: \
-		w65c816.inc \
-		sxb-hacker.asm
+w65c265sxb.obj: w65c265.inc w65c265sxb.inc w65c265sxb.asm
+sxb-hacker.obj: w65c265.inc sxb-hacker.asm
+
+.SUFFIXES: .asm .obj

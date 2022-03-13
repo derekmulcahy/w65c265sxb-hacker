@@ -17,21 +17,6 @@ are developing a flash ROM image the only add the 'WDC' string when you are sure
 the ROM functions properly (or you will have to remove the flash ROM to erase
 it).
 
-## Conversion to use CC65 and friends
-
-The WDC tools are only available on Windows. The CC65 suite is being
-actively developed and is cross platform.
-
-The Makefile will generate several bin files named sxb-0xXXXX.bin.
-These contain the code/data. The names indicate the RAM location that
-they are loaded to. These bin files are used to generate the s28 srecord
-file for loading.
-
-The original code for the WDC tools have been moved into the "originals"
-directory.
-
-This initial release is identical to the WDC Tools based version.
-
 ## UART Connections
 
 You will need two USB connections to the board to access two of the four

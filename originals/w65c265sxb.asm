@@ -21,35 +21,36 @@
 ;
 ;------------------------------------------------------------------------------
 
-                .list on
-                .p816
+                pw      132
+                inclist on
 
-                .include "w65c265.inc"
-                .include "w65c265sxb.inc"
+                chip    65816
+
+                include "w65c265.inc"
+                include "w65c265sxb.inc"
 
 ;==============================================================================
 ; Configuration
 ;------------------------------------------------------------------------------
 
-BAUD_RATE       =     9600                   	; ACIA baud rate
+BAUD_RATE       equ     9600                   	; ACIA baud rate
 
-BRG_VALUE       =     OSC_FREQ/(16*BAUD_RATE)-1
+BRG_VALUE       equ     OSC_FREQ/(16*BAUD_RATE)-1
 
-                .if      BRG_VALUE&$ffff0000
+                if      BRG_VALUE&$ffff0000
                 messg   "BRG_VALUE does not fit in 16-bits"
-                .endif
+                endif
 
-UART            =     3
+UART            equ     3
 
 ;==============================================================================
 ; Power On Reset
 ;------------------------------------------------------------------------------
 
-                .segment "CODE"
-
-                .import  Start
-                .i8
-                .a8
+                code
+                extern  Start
+                longi   off
+                longa   off
 RESET:
                 sei                             ; Disable interrupts
                 native                          ; Switch to native mode
@@ -86,7 +87,7 @@ RESET:
 ; Wait until the last transmission has been completed then send the character
 ; in A.
 
-                .export  UartTx
+                public  UartTx
 UartTx:
                 pha                             ; Save the character
                 php                             ; Save register sizes
@@ -104,7 +105,7 @@ TxWait:         bit     UIFR                    ; Has the timer finished?
 ; Fetch the next character from the receive buffer waiting for some to arrive
 ; if the buffer is empty.
 
-                .export  UartRx
+                public  UartRx
 UartRx:
                 php                             ; Save register sizes
                 short_a                         ; Make A 8-bits
@@ -118,7 +119,7 @@ RxWait:         bit     UIFR                    ; Any data in RX buffer?
 ; Check if the receive buffer contains any data and return C=1 if there is
 ; some.
 
-                .export  UartRxTest
+                public  UartRxTest
 UartRxTest:
                 pha                             ; Save callers A
                 php
@@ -139,7 +140,7 @@ RxDone:         plp
 ; Select the flash ROM bank indicated by the two low order bits of A. The pins
 ; should be set to inputs when a hi bit is needed and a low output for a lo bit.
 
-                .export RomSelect
+                public RomSelect
 RomSelect:
                 php
                 short_a
@@ -164,9 +165,9 @@ RomSelect:
 ; Check if the select ROM bank contains WDC firmware. If it does return with
 ; the Z flag set.
 
-                .export RomCheck
+                public RomCheck
 RomCheck:
                 rep     #Z_FLAG                 ; No firmware in the ROM
                 rts
 
-                .end
+                end
